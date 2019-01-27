@@ -9,7 +9,8 @@ jobs:
       - run:
           name: Update rustc
           command: |
-            rustup target add wasm32-unknown-unknown
+            rustup install nightly-x86_64-unknown-linux-gnu
+            rustup target add wasm32-unknown-unknown --toolchain nightly
             rustup component add rustfmt-preview
             rustup update
       - run:
@@ -20,7 +21,7 @@ jobs:
              git diff --exit-code
       - run:
           name: Test
-          command: cargo test --target=x86_64-unknown-linux-gnu
+          command: cargo +nightly test --target=x86_64-unknown-linux-gnu
       - run:
-          name: Build
-          command: cargo build --release
+          name: Build Nightly
+          command: cargo +nightly build --release
