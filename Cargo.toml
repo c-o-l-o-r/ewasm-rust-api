@@ -8,6 +8,6 @@ description = "ewasm API for Rust"
 edition = "2018"
 
 [features]
-default = [ "std" ]
+default = []
 std = []
 debug = []
