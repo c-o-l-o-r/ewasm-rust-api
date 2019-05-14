@@ -1,7 +1,7 @@
 use core::alloc::{GlobalAlloc, Layout};
 use core::arch::wasm32;
 use core::cell::UnsafeCell;
-use core::ptr::{null_mut, NonNull};
+use core::ptr::null_mut;
 
 #[cfg(feature = "nightly")]
 use core::alloc::AllocErr;
@@ -39,7 +39,7 @@ impl DumbAlloc {
 
         let size = round_to_align(layout.size(), layout.align());
 
-        let mut ptr = self.ptr.get();
+        let ptr = self.ptr.get();
         let cur_pages = wasm32::memory_size(0);
         let end = (cur_pages * PAGE_SIZE) as *mut u8;
 
@@ -81,5 +81,5 @@ unsafe impl GlobalAlloc for DumbAlloc {
             Err(AllocErr) => null_mut(),
         }
     }
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {}
+    unsafe fn dealloc(&self, _ptr: *mut u8, _layout: Layout) {}
 }
