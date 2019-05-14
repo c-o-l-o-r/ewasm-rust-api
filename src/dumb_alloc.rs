@@ -26,6 +26,7 @@ fn round_to_align(size: usize, align: usize) -> usize {
 
 unsafe impl Sync for DumbAlloc {}
 
+#[cfg(target_arch = "wasm32")]
 impl DumbAlloc {
     pub const INIT: Self = DumbAlloc {
         ptr: UnsafeCell::new(0 as *mut u8),
