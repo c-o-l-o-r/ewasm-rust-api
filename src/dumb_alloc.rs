@@ -1,5 +1,6 @@
 use core::alloc::{GlobalAlloc, Layout};
 use core::arch::wasm32;
+use core::cell::UnsafeCell;
 use core::ptr::{null_mut, NonNull};
 
 #[cfg(feature = "nightly")]
@@ -9,33 +10,56 @@ use core::alloc::AllocErr;
 pub struct AllocErr;
 
 pub struct DumbAlloc {
-    /*head: *mut u8,
-end: *mut u8,*/}
+    // Pointer to last allocated byte
+    ptr: UnsafeCell<*mut u8>,
+}
 
 const PAGE_SIZE: usize = 65536;
 
 fn round_to_align(size: usize, align: usize) -> usize {
-    size + (align - (size % align))
+    if size % align == 0 {
+        size
+    } else {
+        size + (align - (size % align))
+    }
 }
 
 unsafe impl Sync for DumbAlloc {}
 
 impl DumbAlloc {
     pub const INIT: Self = DumbAlloc {
-        /*head: 0 as *mut u8,
-        end: 0 as *mut u8,*/
+        ptr: UnsafeCell::new(0 as *mut u8),
     };
 
-    fn alloc_impl(&self, layout: Layout) -> Result<*mut u8, AllocErr> {
+    unsafe fn alloc_impl(&self, layout: Layout) -> Result<*mut u8, AllocErr> {
         if layout.size() == 0 || layout.align() == 0 {
             return Err(AllocErr);
         }
 
         let size = round_to_align(layout.size(), layout.align());
 
-        let pages = (size / PAGE_SIZE) + 1;
+        let mut ptr = self.ptr.get();
+        let cur_pages = wasm32::memory_size(0);
+        let end = (cur_pages * PAGE_SIZE) as *mut u8;
 
-        self.alloc_pages(pages)
+        // If first time, start at end of initial allocated memory
+        if *ptr == 0 as *mut u8 {
+            *ptr = end;
+        }
+
+        // Translated to rust from:
+        // https://github.com/poemm/C_ewasm_contracts/blob/a3276b1242c22f275862869572e77104f1895974/src/ewasm.h#L128
+        let total_bytes_needed = (*ptr as usize) + size;
+        // Allocate more memory if necessary
+        if total_bytes_needed > end as usize {
+            let total_pages_needed = round_to_align(total_bytes_needed, PAGE_SIZE) / PAGE_SIZE;
+            let pages = total_pages_needed - cur_pages;
+            self.alloc_pages(pages)?;
+        }
+
+        *ptr = total_bytes_needed as *mut u8;
+
+        Ok((total_bytes_needed - size) as *mut u8)
     }
 
     fn alloc_pages(&self, pages: usize) -> Result<*mut u8, AllocErr> {
