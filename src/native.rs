@@ -74,4 +74,5 @@ extern "C" {
     pub fn ethereum_storageLoad(keyOffset: *const u32, resultOffset: *const u32);
     pub fn ethereum_storageStore(keyOffset: *const u32, valueOffset: *const u32);
     pub fn ethereum_selfDestruct(addressOffset: *const u32) -> !;
+    pub fn ethereum_isAccountEmpty(addressOffset: *const u32) -> u32;
 }
