@@ -11,6 +11,7 @@ mod native {
         pub fn eth2_blockDataCopy(outputOfset: *const u32, offset: u32, length: u32);
         pub fn eth2_savePostStateRoot(offset: *const u32);
         pub fn eth2_pushNewDeposit(offset: *const u32, length: u32);
+        pub fn eth2_execCode(ptr: *const u32, length: u32);
     }
 }
 
@@ -65,4 +66,8 @@ pub fn push_new_deposit(deposit: &[u8]) {
 /// Save new state root.
 pub fn save_post_state_root(state: Bytes32) {
     unsafe { native::eth2_savePostStateRoot(state.bytes.as_ptr() as *const u32) }
+}
+
+pub fn exec_code(code: &[u8]) {
+    unsafe { native::eth2_execCode(code.as_ptr() as *const u32, code.len() as u32) }
 }
