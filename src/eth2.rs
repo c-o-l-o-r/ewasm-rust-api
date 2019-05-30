@@ -7,11 +7,23 @@ use super::*;
 mod native {
     extern "C" {
         pub fn eth2_loadPreStateRoot(offset: *const u32);
+        pub fn eth2_savePostStateRoot(offset: *const u32);
         pub fn eth2_blockDataSize() -> u32;
         pub fn eth2_blockDataCopy(outputOfset: *const u32, offset: u32, length: u32);
-        pub fn eth2_savePostStateRoot(offset: *const u32);
+        pub fn eth2_returnDataSize() -> u32;
+        pub fn eth2_returnDataCopy(outputOfset: *const u32, offset: u32, length: u32);
+        pub fn eth2_saveReturnData(offset: *const u32, length: u32);
+        pub fn eth2_contextDataSize() -> u32;
+        pub fn eth2_contextDataCopy(outputOfset: *const u32, offset: u32, length: u32);
         pub fn eth2_pushNewDeposit(offset: *const u32, length: u32);
-        pub fn eth2_execCode(code_ptr: *const u32, code_length: u32, calldata_ptr: *const u32, calldata_length u32, ctx_ptr: *const u32, ctx_length: u32);
+        pub fn eth2_execCode(
+            code_ptr: *const u32,
+            code_length: u32,
+            calldata_ptr: *const u32,
+            calldata_length: u32,
+            ctx_ptr: *const u32,
+            ctx_length: u32,
+        );
     }
 }
 
@@ -78,5 +90,34 @@ pub fn exec_code(code: &[u8], calldata: &[u8], ctx: &[u8]) {
             ctx.as_ptr() as *const u32,
             ctx.len() as u32,
         )
+    }
+}
+
+/// Returns the length of the "return data"
+pub fn return_data_size() -> usize {
+    unsafe { native::eth2_returnDataSize() as usize }
+}
+
+/// Copies a slices from the "return data", but does not check for overflow.
+pub fn unsafe_return_data_copy(from: usize, length: usize, ret: &mut [u8]) {
+    unsafe {
+        native::eth2_returnDataCopy(ret.as_mut_ptr() as *const u32, from as u32, length as u32);
+    }
+}
+
+/// Save return data
+pub fn save_return_data(data: &[u8]) {
+    unsafe { native::eth2_saveReturnData(data.as_ptr() as *const u32, data.len() as u32) }
+}
+
+/// Returns the length of the "context data"
+pub fn context_data_size() -> usize {
+    unsafe { native::eth2_contextDataSize() as usize }
+}
+
+/// Copies a slices from the "context data", but does not check for overflow.
+pub fn unsafe_context_data_copy(from: usize, length: usize, ret: &mut [u8]) {
+    unsafe {
+        native::eth2_contextDataCopy(ret.as_mut_ptr() as *const u32, from as u32, length as u32);
     }
 }
