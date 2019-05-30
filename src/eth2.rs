@@ -93,6 +93,16 @@ pub fn exec_code(code: &[u8], calldata: &[u8], ctx: &[u8]) {
     }
 }
 
+#[cfg(feature = "std")]
+/// Returns a vector containing the entire "block data".
+pub fn acquire_return_data() -> Vec<u8> {
+    let length = return_data_size();
+
+    let mut ret: Vec<u8> = unsafe_alloc_buffer(length);
+    unsafe_return_data_copy(0, length, &mut ret);
+    ret
+}
+
 /// Returns the length of the "return data"
 pub fn return_data_size() -> usize {
     unsafe { native::eth2_returnDataSize() as usize }
@@ -108,6 +118,16 @@ pub fn unsafe_return_data_copy(from: usize, length: usize, ret: &mut [u8]) {
 /// Save return data
 pub fn save_return_data(data: &[u8]) {
     unsafe { native::eth2_saveReturnData(data.as_ptr() as *const u32, data.len() as u32) }
+}
+
+#[cfg(feature = "std")]
+/// Returns a vector containing the entire "block data".
+pub fn acquire_context_data() -> Vec<u8> {
+    let length = return_data_size();
+
+    let mut ret: Vec<u8> = unsafe_alloc_buffer(length);
+    unsafe_context_data_copy(0, length, &mut ret);
+    ret
 }
 
 /// Returns the length of the "context data"
