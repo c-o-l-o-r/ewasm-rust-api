@@ -123,7 +123,7 @@ pub fn save_return_data(data: &[u8]) {
 #[cfg(feature = "std")]
 /// Returns a vector containing the entire "block data".
 pub fn acquire_context_data() -> Vec<u8> {
-    let length = return_data_size();
+    let length = context_data_size();
 
     let mut ret: Vec<u8> = unsafe_alloc_buffer(length);
     unsafe_context_data_copy(0, length, &mut ret);
